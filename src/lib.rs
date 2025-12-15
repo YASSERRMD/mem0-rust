@@ -37,11 +37,11 @@ pub mod utils;
 pub mod vector_stores;
 
 // Re-export main types for convenience
-pub use config::{EmbedderConfig, LLMConfig, MemoryConfig, VectorStoreConfig};
+pub use config::{EmbedderConfig, LLMConfig, MemoryConfig, VectorStoreConfig, MockEmbedderConfig, HuggingFaceEmbedderConfig};
 pub use errors::MemoryError;
 pub use memory::Memory;
 pub use models::{
-    AddOptions, AddResult, Filters, HistoryEntry, MemoryRecord, Message, Role, SearchOptions,
+    AddOptions, AddResult, Filters, GetAllOptions, HistoryEntry, MemoryRecord, Message, Role, SearchOptions,
     SearchResult,
 };
 

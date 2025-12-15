@@ -62,6 +62,9 @@ pub enum EmbedderConfig {
     /// Ollama local embeddings
     #[cfg(feature = "ollama")]
     Ollama(OllamaEmbedderConfig),
+
+    /// HuggingFace Inference API embeddings
+    HuggingFace(HuggingFaceEmbedderConfig),
 }
 
 impl Default for EmbedderConfig {
@@ -133,6 +136,33 @@ impl Default for OllamaEmbedderConfig {
             model: "nomic-embed-text".to_string(),
             base_url: "http://localhost:11434".to_string(),
             dimensions: 768,
+        }
+    }
+}
+
+/// HuggingFace embedder configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HuggingFaceEmbedderConfig {
+    /// API key (defaults to HF_TOKEN env var)
+    pub api_key: Option<String>,
+
+    /// Model name
+    pub model: String,
+
+    /// Embedding dimensions
+    pub dimensions: usize,
+
+    /// API endpoint (optional)
+    pub api_url: Option<String>,
+}
+
+impl Default for HuggingFaceEmbedderConfig {
+    fn default() -> Self {
+        Self {
+            api_key: None,
+            model: "sentence-transformers/all-MiniLM-L6-v2".to_string(),
+            dimensions: 384,
+            api_url: None,
         }
     }
 }
