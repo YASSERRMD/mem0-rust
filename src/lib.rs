@@ -34,11 +34,16 @@ pub mod history;
 pub mod llms;
 pub mod memory;
 pub mod models;
+pub mod rerankers;
 pub mod utils;
 pub mod vector_stores;
 
 // Re-export main types for convenience
-pub use config::{EmbedderConfig, LLMConfig, MemoryConfig, VectorStoreConfig, MockEmbedderConfig, HuggingFaceEmbedderConfig};
+// Re-export main types for convenience
+pub use config::{
+    EmbedderConfig, HuggingFaceEmbedderConfig, LLMConfig, MemoryConfig, MockEmbedderConfig,
+    RerankerConfig, CohereRerankerConfig, VectorStoreConfig,
+};
 pub use errors::MemoryError;
 pub use memory::Memory;
 pub use models::{

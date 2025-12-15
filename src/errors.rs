@@ -42,6 +42,10 @@ pub enum MemoryError {
     /// History database error
     #[error("history database error: {0}")]
     History(String),
+
+    /// Reranking error
+    #[error("reranking error: {0}")]
+    Reranker(String),
 }
 
 /// Embedding provider errors

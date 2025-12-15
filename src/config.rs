@@ -27,6 +27,9 @@ pub struct MemoryConfig {
     /// Custom prompts for fact extraction
     pub custom_prompts: Option<CustomPrompts>,
 
+    /// Reranker configuration
+    pub reranker: Option<RerankerConfig>,
+
     /// API version
     pub version: String,
 
@@ -42,6 +45,7 @@ impl Default for MemoryConfig {
             llm: None,
             history_db_path: None,
             custom_prompts: None,
+            reranker: None,
             version: "1.1".to_string(),
             collection_name: "mem0".to_string(),
         }
@@ -406,3 +410,30 @@ pub struct CustomPrompts {
     /// Custom memory update prompt
     pub memory_update: Option<String>,
 }
+
+/// Reranker configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "provider", rename_all = "lowercase")]
+pub enum RerankerConfig {
+    /// Cohere reranker
+    Cohere(CohereRerankerConfig),
+}
+
+/// Cohere reranker configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CohereRerankerConfig {
+    /// API key (defaults to COHERE_API_KEY env var)
+    pub api_key: Option<String>,
+    /// Model name
+    pub model: String,
+}
+
+impl Default for CohereRerankerConfig {
+    fn default() -> Self {
+        Self {
+            api_key: None,
+            model: "rerank-english-v3.0".to_string(),
+        }
+    }
+}
+

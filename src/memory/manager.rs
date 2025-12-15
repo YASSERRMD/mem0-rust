@@ -1,5 +1,6 @@
 //! Core Memory manager.
 
+use std::collections::HashMap;
 use std::sync::Arc;
 use tracing::{debug, info, warn};
 use uuid::Uuid;
@@ -16,6 +17,7 @@ use crate::models::{
     SearchResult,
 };
 use crate::vector_stores::{create_vector_store, VectorStore};
+use crate::rerankers::{create_reranker, Reranker};
 
 use super::prompts::{
     format_fact_extraction_input, format_memory_update_input, FACT_EXTRACTION_PROMPT,
@@ -28,6 +30,7 @@ pub struct Memory {
     vector_store: Arc<dyn VectorStore>,
     llm: Option<Arc<dyn LLM>>,
     history: Option<Arc<HistoryManager>>,
+    reranker: Option<Arc<dyn Reranker>>,
     config: MemoryConfig,
 }
 
@@ -52,6 +55,12 @@ impl Memory {
             None
         };
 
+        let reranker = if let Some(reranker_config) = &config.reranker {
+            Some(create_reranker(reranker_config)?)
+        } else {
+            None
+        };
+
         info!(
             "Initialized Memory with {} embedder, {} dimensions",
             embedder.model_name(),
@@ -63,6 +72,7 @@ impl Memory {
             vector_store,
             llm,
             history,
+            reranker,
             config,
         })
     }
@@ -190,8 +200,8 @@ impl Memory {
         info!("Extracted {} facts", facts.facts.len());
 
         // Search for existing related memories
-        let mut existing_memories: Vec<(String, String)> = Vec::new();
-        // let mut fact_embeddings: Vec<(String, Vec<f32>)> = Vec::new(); // Unused
+        let mut existing_memories: Vec<(String, String)> = Vec::new(); // (Index, Content)
+        let mut memory_map: HashMap<String, String> = HashMap::new(); // Index -> RealID
 
         let search_filters = Filters {
             conditions: vec![],
@@ -200,7 +210,6 @@ impl Memory {
 
         for fact in &facts.facts {
             let embedding = self.embedder.embed(fact).await?;
-            // fact_embeddings.push((fact.clone(), embedding.clone()));
 
             let similar = self
                 .vector_store
@@ -208,9 +217,12 @@ impl Memory {
                 .await?;
 
             for result in similar {
-                let id = existing_memories.len().to_string();
-                if !existing_memories.iter().any(|(_, t)| t == &result.payload.data) {
-                    existing_memories.push((id, result.payload.data));
+                // Check if we already have this memory in our list (dedupe by real ID)
+                let real_id = result.id.clone();
+                if !memory_map.values().any(|rid| rid == &real_id) {
+                     let index = memory_map.len().to_string();
+                     memory_map.insert(index.clone(), real_id);
+                     existing_memories.push((index, result.payload.data));
                 }
             }
         }
@@ -286,22 +298,53 @@ impl Memory {
                     }
                 }
                 "UPDATE" => {
-                    // TODO: Implement update logic within add_with_inference if needed
-                    // For now, simple update based on id
-                    if let (Some(_id), Some(text)) = (action.id, action.text) {
-                        debug!("Would update memory {} with: {}", _id, text);
-                        // self.update(&id, &text).await?; 
-                        // Note: ID in existing_memories was index, not UUID.
-                        // Need to map back to UUID? 
-                        // Current implementation of existing_memories stores index as ID. 
-                        // This prevents actual update. 
-                        // For fully functional updates, existing_memories should map index to real ID.
+                    if let (Some(index_id), Some(text)) = (action.id, action.text) {
+                        if let Some(real_id) = memory_map.get(&index_id) {
+                            debug!("Updating memory {} (index {}) with: {}", real_id, index_id, text);
+                            
+                            // Perform update
+                            match self.update(real_id, &text).await {
+                                Ok(record) => {
+                                    results.push(MemoryEvent {
+                                        id: record.id,
+                                        memory: text,
+                                        event: EventType::Update,
+                                    });
+                                },
+                                Err(e) => {
+                                    warn!("Failed to update memory {}: {}", real_id, e);
+                                }
+                            }
+                        } else {
+                            warn!("LLM tried to update unknown memory index: {}", index_id);
+                        }
                     }
                 }
                 "DELETE" => {
-                    // TODO: Implement delete logic
-                    if let Some(id) = action.id {
-                        debug!("Would delete memory {}", id);
+                    if let Some(index_id) = action.id {
+                        if let Some(real_id) = memory_map.get(&index_id) {
+                            debug!("Deleting memory {} (index {})", real_id, index_id);
+                            
+                            // Perform delete
+                            match self.delete(real_id).await {
+                                Ok(_) => {
+                                     // ID is needed for event, but delete returns void.
+                                     // We can use Uuid::parse_str(real_id)
+                                     if let Ok(uuid) = Uuid::parse_str(real_id) {
+                                         results.push(MemoryEvent {
+                                            id: uuid,
+                                            memory: String::new(), // Deleted
+                                            event: EventType::Delete,
+                                        });
+                                     }
+                                },
+                                Err(e) => {
+                                    warn!("Failed to delete memory {}: {}", real_id, e);
+                                }
+                            }
+                        } else {
+                            warn!("LLM tried to delete unknown memory index: {}", index_id);
+                        }
                     }
                 }
                 "NOOP" => {
@@ -326,14 +369,16 @@ impl Memory {
         let limit = options.limit.unwrap_or(10);
         let threshold = options.threshold.unwrap_or(0.0);
 
+        // Fetch more candidates if reranking is enabled
+        let search_limit = if options.rerank { limit * 10 } else { limit * 2 };
+
         let results = self
             .vector_store
-            .search(&embedding, limit * 2, options.filters.as_ref())
+            .search(&embedding, search_limit, options.filters.as_ref())
             .await?;
 
         let mut scored: Vec<ScoredMemory> = results
             .into_iter()
-            .filter(|r| r.score >= threshold)
             .map(|r| r.to_scored_memory())
             .collect();
 
@@ -357,6 +402,20 @@ impl Memory {
             true
         });
 
+        // Filter by threshold before reranking (optional, but saves rerank quota)
+        scored.retain(|m| m.score >= threshold);
+
+        // Reranking
+        if options.rerank {
+            if let Some(reranker) = &self.reranker {
+                scored = reranker.rerank(query, scored).await?;
+            } else {
+                 warn!("Reranking requested but no reranker configured");
+            }
+        }
+        
+        // Final sort and limit
+        scored.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
         scored.truncate(limit);
 
         Ok(SearchResult { results: scored })
@@ -447,7 +506,7 @@ impl Memory {
                 let _ = history.add_history(
                     record.id,
                     Some(record.content),
-                    "DELETED".to_string(), // Sentinel value? Or just empty?
+                    "DELETED".to_string(),
                     EventType::Delete,
                     Utc::now(),
                     record.user_id,

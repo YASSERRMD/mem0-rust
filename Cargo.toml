@@ -125,3 +125,7 @@ path = "examples/huggingface_embeddings.rs"
 [[example]]
 name = "history_tracking"
 path = "examples/history_tracking.rs"
+
+[[example]]
+name = "reranking"
+path = "examples/reranking.rs"
