@@ -40,6 +40,7 @@ impl HistoryManager {
         })
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn add_history(
         &self,
         memory_id: Uuid,

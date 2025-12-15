@@ -66,7 +66,7 @@ mod tests {
     #[tokio::test]
     async fn test_memory_creation() {
         let config = MemoryConfig::default();
-        let memory = Memory::new(config).await.unwrap();
-        assert!(memory.is_ok() || true); // Basic sanity check
+        let memory = Memory::new(config).await;
+        assert!(memory.is_ok()); 
     }
 }

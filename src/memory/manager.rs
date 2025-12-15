@@ -31,6 +31,7 @@ pub struct Memory {
     llm: Option<Arc<dyn LLM>>,
     history: Option<Arc<HistoryManager>>,
     reranker: Option<Arc<dyn Reranker>>,
+    #[allow(dead_code)]
     config: MemoryConfig,
 }
 
@@ -84,8 +85,6 @@ impl Memory {
         options: AddOptions,
     ) -> Result<AddResult, MemoryError> {
         let messages = messages.into().into_messages();
-        let mut results = Vec::new();
-
         // Validate scoping
         if options.user_id.is_none() && options.agent_id.is_none() && options.run_id.is_none() {
             return Err(MemoryError::InvalidInput(
@@ -93,13 +92,13 @@ impl Memory {
             ));
         }
 
-        if options.infer && self.llm.is_some() {
+        let results = if options.infer && self.llm.is_some() {
             // Use LLM for fact extraction
-            results = self.add_with_inference(&messages, &options).await?;
+            self.add_with_inference(&messages, &options).await?
         } else {
             // Add messages directly without inference
-            results = self.add_raw(&messages, &options).await?;
-        }
+            self.add_raw(&messages, &options).await?
+        };
 
         Ok(AddResult { results })
     }
@@ -170,7 +169,7 @@ impl Memory {
         // Format messages for extraction
         let messages_text = messages
             .iter()
-            .map(|m| format!("{}: {}", format!("{:?}", m.role), m.content))
+            .map(|m| format!("{:?}: {}", m.role, m.content))
             .collect::<Vec<_>>()
             .join("\n");
 

@@ -141,11 +141,7 @@ impl InMemoryStore {
         }
     }
 
-    fn matches_scoping(payload: &Payload, filters: Option<&Filters>) -> bool {
-        // For now, scoping is handled via metadata filters
-        // This method can be extended for explicit user_id/agent_id/run_id filtering
-        true
-    }
+
 }
 
 impl Default for InMemoryStore {

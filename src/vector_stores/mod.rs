@@ -38,7 +38,10 @@ pub async fn create_vector_store(
     dimensions: usize,
 ) -> Result<Arc<dyn VectorStore>, VectorStoreError> {
     match config {
-        VectorStoreConfig::Memory(_) => Ok(Arc::new(InMemoryStore::new())),
+        VectorStoreConfig::Memory(_) => {
+            let _ = (collection_name, dimensions);
+            Ok(Arc::new(InMemoryStore::new()))
+        }
 
         #[cfg(feature = "qdrant")]
         VectorStoreConfig::Qdrant(cfg) => {

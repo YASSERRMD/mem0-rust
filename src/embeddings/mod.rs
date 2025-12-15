@@ -24,7 +24,7 @@ mod ollama;
 #[cfg(feature = "ollama")]
 pub use ollama::OllamaEmbedder;
 
-use crate::config::{EmbedderConfig, HuggingFaceEmbedderConfig};
+use crate::config::EmbedderConfig;
 use crate::errors::EmbeddingError;
 use std::sync::Arc;
 
