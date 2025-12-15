@@ -5,9 +5,12 @@ A Rust implementation of [mem0](https://github.com/mem0ai/mem0) - Universal memo
 ## Features
 
 - 🦀 **Pure Rust** - Fast, safe, and efficient
-- 🔌 **Multiple Backends** - Support for various embedding and vector store providers
+- 🔌 **Multiple Backends** - Support for Memory, Qdrant, PostgreSQL (pgvector), and Redis vector stores
+- 🧠 **Embedding Support** - OpenAI, Ollama, HuggingFace Inference API, and Mock providers
 - 🤖 **LLM Integration** - Automatic fact extraction with OpenAI, Ollama, or Anthropic
 - 🔍 **Semantic Search** - Find relevant memories using vector similarity
+- 🔄 **Reranking** - Improve search relevance with rerankers (e.g. Cohere)
+- 📜 **History Tracking** - Track memory changes (ADD/UPDATE/DELETE) with local SQLite history
 - 👥 **Multi-User** - Isolated memory spaces per user/agent/run
 - 🏷️ **Metadata Filtering** - Rich filtering with operators (eq, gt, in, contains, etc.)
 
@@ -100,6 +103,41 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 ```
 
+## Advanced Capabilities
+
+### History Tracking
+
+Track changes to your memories locally using SQLite:
+
+```rust
+use mem0_rust::MemoryConfig;
+use std::path::PathBuf;
+
+let config = MemoryConfig {
+    history_db_path: Some(PathBuf::from("history.db")),
+    ..Default::default()
+};
+// Memories added/updated/deleted will now be logged
+```
+
+### Reranking
+
+Improve search results using a reranker (like Cohere):
+
+```rust
+use mem0_rust::{MemoryConfig, RerankerConfig, CohereRerankerConfig};
+
+let config = MemoryConfig {
+    reranker: Some(RerankerConfig::Cohere(CohereRerankerConfig {
+        api_key: Some("your-cohere-key".to_string()),
+        ..Default::default()
+    })),
+    ..Default::default()
+};
+
+// Use rerank: true in SearchOptions
+```
+
 ## API Reference
 
 ### Memory Methods
@@ -107,49 +145,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 | Method | Description |
 |--------|-------------|
 | `add(messages, options)` | Add memories from text or messages |
-| `search(query, options)` | Search for relevant memories |
+| `search(query, options)` | Search for relevant memories (w/ optional reranking) |
 | `get(id)` | Get a memory by ID |
 | `get_all(options)` | List all memories with filters |
 | `update(id, content)` | Update a memory's content |
 | `delete(id)` | Delete a memory |
-| `history(id)` | Get version history (coming soon) |
+| `history(id)` | Get version history of a memory |
 | `reset(options)` | Delete all memories |
 
 ### Scoping
 
-Memories are scoped by `user_id`, `agent_id`, and/or `run_id`:
-
-```rust
-// User-scoped memory
-AddOptions::for_user("alice")
-
-// Agent-scoped memory
-AddOptions::for_agent("assistant-v1")
-
-// Combined scoping
-AddOptions {
-    user_id: Some("alice".to_string()),
-    agent_id: Some("assistant-v1".to_string()),
-    ..Default::default()
-}
-```
+Memories are scoped by `user_id`, `agent_id`, and/or `run_id`.
 
 ## Examples
 
 Run the examples:
 
 ```bash
-# Basic usage (in-memory, mock embeddings)
+# Basic usage
 cargo run --example basic_usage
 
-# With OpenAI
-cargo run --example async_openai --features openai
+# History Tracking
+cargo run --example history_tracking
 
-# With Ollama (local)
-cargo run --example ollama_local --features ollama
+# Reranking (Cohere)
+cargo run --example reranking
 
-# With Qdrant
-cargo run --example qdrant_store --features qdrant
+# HuggingFace Embeddings
+cargo run --example huggingface_embeddings
+
+# Vector Stores
+cargo run --example qdrant_store
+cargo run --example postgres_pgvector
+cargo run --example redis_vector
 ```
 
 ## Architecture
@@ -157,11 +185,13 @@ cargo run --example qdrant_store --features qdrant
 ```
 mem0-rust/
 ├── src/
-│   ├── embeddings/      # Embedding providers (Mock, OpenAI, Ollama)
-│   ├── vector_stores/   # Vector backends (Memory, Qdrant, Postgres, Redis)
-│   ├── llms/            # LLM providers (OpenAI, Ollama, Anthropic)
+│   ├── embeddings/      # Embedders (Mock, OpenAI, Ollama, HuggingFace)
+│   ├── vector_stores/   # Stores (Memory, Qdrant, Postgres, Redis)
+│   ├── llms/            # LLMs (OpenAI, Ollama, Anthropic)
+│   ├── history/         # History tracking (SQLite)
+│   ├── rerankers/       # Rerankers (Cohere)
 │   ├── memory/          # Core memory management
-│   └── utils/           # Filter builders, utilities
+│   └── utils/           # Utilities
 ```
 
 ## Contributing
