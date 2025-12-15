@@ -107,3 +107,13 @@ required-features = ["ollama"]
 name = "qdrant_store"
 path = "examples/qdrant_store.rs"
 required-features = ["qdrant"]
+
+[[example]]
+name = "postgres_pgvector"
+path = "examples/postgres_pgvector.rs"
+required-features = ["postgres"]
+
+[[example]]
+name = "redis_vector"
+path = "examples/redis_vector.rs"
+required-features = ["redis"]
