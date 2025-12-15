@@ -121,3 +121,7 @@ required-features = ["redis"]
 [[example]]
 name = "huggingface_embeddings"
 path = "examples/huggingface_embeddings.rs"
+
+[[example]]
+name = "history_tracking"
+path = "examples/history_tracking.rs"

@@ -30,6 +30,7 @@
 pub mod config;
 pub mod embeddings;
 pub mod errors;
+pub mod history;
 pub mod llms;
 pub mod memory;
 pub mod models;
