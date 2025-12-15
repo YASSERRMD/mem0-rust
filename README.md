@@ -1,6 +1,12 @@
 # mem0-rust
 
-A Rust implementation of [mem0](https://github.com/mem0ai/mem0) - Universal memory layer for AI Agents.
+[![Build Status](https://github.com/YASSERRMD/mem0-rust/actions/workflows/rust.yml/badge.svg)](https://github.com/YASSERRMD/mem0-rust/actions)
+[![Crates.io](https://img.shields.io/crates/v/mem0-rust.svg)](https://crates.io/crates/mem0-rust)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+A high-performance Rust implementation of [mem0](https://github.com/mem0ai/mem0), the universal memory layer for AI Agents.
+
+maintained by [YASSERRMD](https://github.com/YASSERRMD).
 
 ## Features
 
