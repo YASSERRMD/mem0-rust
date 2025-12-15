@@ -1,17 +1,36 @@
-use mem0_rust::memory::MemoryClient;
-use serde_json::json;
+//! Deletion example for mem0-rust.
 
-fn main() {
-    let mut client = MemoryClient::default();
+use mem0_rust::{AddOptions, Memory, MemoryConfig, SearchOptions};
 
-    let record = client.add("Temporary note", json!({"category": "temp"}));
-    println!("Stored memory {}: {}", record.id, record.content);
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = MemoryConfig::default();
+    let memory = Memory::new(config).await?;
 
-    client
-        .delete(&record.id.to_string())
-        .expect("delete should succeed");
-    println!("Deleted record {}", record.id);
+    // Add a memory
+    let result = memory
+        .add(
+            "Temporary note to delete",
+            AddOptions::for_user("user1").raw(),
+        )
+        .await?;
 
-    let results = client.search("Temporary note").expect("search to work");
-    println!("Search after deletion returned {} results", results.len());
+    let memory_id = result.results[0].id.to_string();
+    println!("Added memory with ID: {}", memory_id);
+
+    // Delete the memory
+    memory.delete(&memory_id).await?;
+    println!("Deleted memory: {}", memory_id);
+
+    // Verify deletion
+    let search_results = memory
+        .search(
+            "Temporary note",
+            SearchOptions::for_user("user1"),
+        )
+        .await?;
+
+    println!("Search after deletion returned {} results", search_results.results.len());
+
+    Ok(())
 }

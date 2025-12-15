@@ -1,14 +1,109 @@
 [package]
 name = "mem0-rust"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
-authors = ["OpenAI Assistant"]
-description = "Rust reimplementation of the mem0 memory client"
+authors = ["mem0-rust contributors"]
+description = "Rust implementation of mem0 - Universal memory layer for AI Agents"
 license = "MIT"
+repository = "https://github.com/YASSERRMD/mem0-rust"
+keywords = ["memory", "ai", "agents", "embeddings", "vector-store"]
+categories = ["science", "database"]
+
+[features]
+default = ["memory-store"]
+full = ["openai", "ollama", "anthropic", "qdrant", "postgres", "redis"]
+
+# Storage backends
+memory-store = []
+qdrant = ["dep:qdrant-client"]
+postgres = ["dep:sqlx", "dep:pgvector"]
+redis = ["dep:redis"]
+
+# Embedding providers
+openai = ["dep:async-openai"]
+ollama = ["dep:ollama-rs"]
+
+# LLM providers
+anthropic = ["dep:reqwest"]
 
 [dependencies]
+# Core
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-thiserror = "1.0"
+thiserror = "2.0"
 uuid = { version = "1.10", features = ["v4", "serde"] }
 chrono = { version = "0.4", features = ["serde"] }
+async-trait = "0.1"
+tokio = { version = "1.0", features = ["full"] }
+tracing = "0.1"
+sha2 = "0.10"
+hex = "0.4"
+
+# HTTP client (for Anthropic and HuggingFace)
+reqwest = { version = "0.12", features = ["json"], optional = true }
+
+# OpenAI
+async-openai = { version = "0.25", optional = true }
+
+# Ollama
+ollama-rs = { version = "0.2", features = ["stream"], optional = true }
+
+# Qdrant
+qdrant-client = { version = "1.12", optional = true }
+
+# PostgreSQL with pgvector
+sqlx = { version = "0.8", features = ["runtime-tokio", "postgres", "uuid", "chrono", "json"], optional = true }
+pgvector = { version = "0.4", features = ["sqlx"], optional = true }
+
+# Redis
+redis = { version = "0.27", features = ["tokio-comp", "connection-manager", "json"], optional = true }
+
+# SQLite for history (always available)
+rusqlite = { version = "0.32", features = ["bundled"] }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tracing-subscriber = "0.3"
+
+[[example]]
+name = "basic_usage"
+path = "examples/basic_usage.rs"
+
+[[example]]
+name = "custom_config"
+path = "examples/custom_config.rs"
+
+[[example]]
+name = "deletion"
+path = "examples/deletion.rs"
+
+[[example]]
+name = "error_handling"
+path = "examples/error_handling.rs"
+
+[[example]]
+name = "metadata_filtering"
+path = "examples/metadata_filtering.rs"
+
+[[example]]
+name = "multiple_clients"
+path = "examples/multiple_clients.rs"
+
+[[example]]
+name = "scored_results"
+path = "examples/scored_results.rs"
+
+[[example]]
+name = "async_openai"
+path = "examples/async_openai.rs"
+required-features = ["openai"]
+
+[[example]]
+name = "ollama_local"
+path = "examples/ollama_local.rs"
+required-features = ["ollama"]
+
+[[example]]
+name = "qdrant_store"
+path = "examples/qdrant_store.rs"
+required-features = ["qdrant"]

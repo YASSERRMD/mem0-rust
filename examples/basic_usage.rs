@@ -1,27 +1,71 @@
-use mem0_rust::memory::MemoryClient;
-use serde_json::json;
+//! Basic usage example for mem0-rust.
+//!
+//! This example demonstrates how to create a Memory instance,
+//! add memories, and search for them.
 
-fn main() {
-    // Create a client with default configuration.
-    let mut client = MemoryClient::default();
+use mem0_rust::{AddOptions, Memory, MemoryConfig, SearchOptions};
 
-    // Add a couple of memories with attached metadata.
-    client.add(
-        "Rust makes systems programming approachable",
-        json!({"language": "rust", "kind": "blog"}),
-    );
-    client.add(
-        "Python is popular for data science",
-        json!({"language": "python", "kind": "article"}),
-    );
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a memory instance with default config (in-memory store, mock embedder)
+    let config = MemoryConfig::default();
+    let memory = Memory::new(config).await?;
 
-    // Search for a query and print the top matches.
-    let results = client
-        .search("systems programming")
-        .expect("search to succeed");
+    // Add some memories for a user
+    let user_id = "alice";
+
+    memory
+        .add(
+            "I love programming in Rust",
+            AddOptions {
+                user_id: Some(user_id.to_string()),
+                infer: false, // Disable LLM inference for this example
+                ..Default::default()
+            },
+        )
+        .await?;
+
+    memory
+        .add(
+            "My favorite food is pizza",
+            AddOptions {
+                user_id: Some(user_id.to_string()),
+                infer: false,
+                ..Default::default()
+            },
+        )
+        .await?;
+
+    memory
+        .add(
+            "I work as a software engineer",
+            AddOptions {
+                user_id: Some(user_id.to_string()),
+                infer: false,
+                ..Default::default()
+            },
+        )
+        .await?;
+
+    // Search for relevant memories
+    let results = memory
+        .search(
+            "programming languages",
+            SearchOptions {
+                user_id: Some(user_id.to_string()),
+                limit: Some(3),
+                ..Default::default()
+            },
+        )
+        .await?;
 
     println!("Top results:");
-    for item in results {
-        println!("- {} (metadata: {})", item.record.content, item.record.metadata);
+    for result in &results.results {
+        println!(
+            "- {} (score: {:.3})",
+            result.record.content, result.score
+        );
     }
+
+    Ok(())
 }

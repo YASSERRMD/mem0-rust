@@ -1,34 +1,49 @@
-use mem0_rust::config::MemoryConfig;
-use mem0_rust::memory::MemoryClient;
-use serde_json::json;
+//! Custom configuration example for mem0-rust.
 
-fn main() {
-    // Tune embedding dimension, similarity threshold, and max results.
+use mem0_rust::{AddOptions, Memory, MemoryConfig, MockEmbedderConfig, EmbedderConfig, SearchOptions};
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Create a custom configuration
     let config = MemoryConfig {
-        embedding_dim: 32,
-        similarity_threshold: 0.2,
-        max_results: 3,
+        embedder: EmbedderConfig::Mock(MockEmbedderConfig {
+            dimensions: 256, // Use larger dimensions
+        }),
+        collection_name: "custom_memories".to_string(),
+        ..Default::default()
     };
 
-    let mut client = MemoryClient::new(config);
+    let memory = Memory::new(config).await?;
 
-    client.add(
-        "The Eiffel Tower is in Paris",
-        json!({"tag": "geography"}),
-    );
-    client.add(
-        "The Louvre houses the Mona Lisa",
-        json!({"tag": "museum"}),
-    );
-    client.add(
-        "Rust's ownership model guarantees memory safety",
-        json!({"tag": "programming"}),
-    );
+    // Add memories
+    memory
+        .add(
+            "The Eiffel Tower is in Paris",
+            AddOptions::for_user("tourist").raw(),
+        )
+        .await?;
 
-    let results = client.search("Paris museum").expect("search to work");
+    memory
+        .add(
+            "The Great Wall is in China",
+            AddOptions::for_user("tourist").raw(),
+        )
+        .await?;
 
-    println!("Limited results with a similarity threshold:");
-    for (index, item) in results.iter().enumerate() {
-        println!("{}. {} (score {:.3})", index + 1, item.record.content, item.score);
+    // Search with threshold
+    let results = memory
+        .search(
+            "famous landmarks in France",
+            SearchOptions::for_user("tourist")
+                .with_limit(5)
+                .with_threshold(0.1),
+        )
+        .await?;
+
+    println!("Landmarks matching 'France':");
+    for result in &results.results {
+        println!("- {} (score: {:.3})", result.record.content, result.score);
     }
+
+    Ok(())
 }

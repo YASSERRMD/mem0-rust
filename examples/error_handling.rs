@@ -1,32 +1,74 @@
-use mem0_rust::config::MemoryConfig;
-use mem0_rust::memory::MemoryClient;
-use serde_json::json;
+//! Error handling example for mem0-rust.
 
-fn main() {
-    // Use a small result set and permissive similarity threshold.
-    let config = MemoryConfig {
-        embedding_dim: 16,
-        similarity_threshold: 0.0,
-        max_results: 2,
-    };
-    let mut client = MemoryClient::new(config);
+use mem0_rust::{AddOptions, Memory, MemoryConfig, MemoryError, SearchOptions};
 
-    let record = client.add("Offline-first apps cache writes", json!({"tag": "architecture"}));
-    println!("Stored record {}", record.id);
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = MemoryConfig::default();
+    let memory = Memory::new(config).await?;
 
-    // Safe deletion with explicit error handling if the id is unknown.
-    match client.delete("non-existent-id") {
-        Ok(_) => println!("Unexpectedly deleted a record"),
-        Err(err) => println!("Delete failed as expected: {err}"),
+    // Add a valid memory
+    let result = memory
+        .add(
+            "Valid memory content",
+            AddOptions::for_user("user1").raw(),
+        )
+        .await?;
+    println!("Added memory: {}", result.results[0].id);
+
+    // Try to delete a non-existent memory
+    match memory.delete("non-existent-id").await {
+        Ok(_) => println!("Deleted successfully"),
+        Err(MemoryError::NotFound(id)) => {
+            println!("Error: Memory with id '{}' not found", id);
+        }
+        Err(e) => {
+            println!("Unexpected error: {}", e);
+        }
     }
 
-    // Search with the limited result set to illustrate max_results behavior.
-    client.add("CRDTs reconcile concurrent updates", json!({"tag": "distributed"}));
-    client.add("Vector clocks track causality", json!({"tag": "distributed"}));
-
-    let results = client.search("offline updates").expect("search to succeed");
-    println!("Received {} results (bounded by max_results)", results.len());
-    for item in results {
-        println!("- {} [score {:.3}]", item.record.content, item.score);
+    // Try to add without scoping (will fail)
+    match memory
+        .add(
+            "Memory without user_id",
+            AddOptions {
+                infer: false,
+                ..Default::default()
+            },
+        )
+        .await
+    {
+        Ok(_) => println!("Added successfully"),
+        Err(MemoryError::InvalidInput(msg)) => {
+            println!("Validation error: {}", msg);
+        }
+        Err(e) => {
+            println!("Unexpected error: {}", e);
+        }
     }
+
+    // Search with limit
+    memory
+        .add("CRDTs reconcile concurrent updates", AddOptions::for_user("dev").raw())
+        .await?;
+    memory
+        .add("Vector clocks track causality", AddOptions::for_user("dev").raw())
+        .await?;
+    memory
+        .add("Consensus algorithms ensure agreement", AddOptions::for_user("dev").raw())
+        .await?;
+
+    let results = memory
+        .search(
+            "distributed systems",
+            SearchOptions::for_user("dev").with_limit(2),
+        )
+        .await?;
+
+    println!("\nReceived {} results (bounded by limit)", results.results.len());
+    for r in &results.results {
+        println!("- {} [score {:.3}]", r.record.content, r.score);
+    }
+
+    Ok(())
 }

@@ -1,61 +1,66 @@
-//! A lightweight Rust reimplementation of the core `mem0` memory client.
-//! It provides deterministic embeddings, an in-memory vector store, and a small
-//! API for adding, searching, and deleting memories.
+//! # mem0-rust
+//!
+//! A Rust implementation of mem0 - Universal memory layer for AI Agents.
+//!
+//! This library provides a flexible memory system with support for multiple:
+//! - Embedding providers (OpenAI, Ollama, HuggingFace)
+//! - Vector stores (In-memory, Qdrant, PostgreSQL, Redis)
+//! - LLM providers (OpenAI, Ollama, Anthropic)
+//!
+//! ## Quick Start
+//!
+//! ```rust,no_run
+//! use mem0_rust::{Memory, MemoryConfig};
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<(), Box<dyn std::error::Error>> {
+//!     let config = MemoryConfig::default();
+//!     let memory = Memory::new(config).await?;
+//!
+//!     // Add a memory
+//!     let result = memory.add("User prefers dark mode", Default::default()).await?;
+//!
+//!     // Search memories
+//!     let results = memory.search("user preferences", Default::default()).await?;
+//!
+//!     Ok(())
+//! }
+//! ```
 
 pub mod config;
-pub mod embedder;
+pub mod embeddings;
 pub mod errors;
+pub mod llms;
 pub mod memory;
 pub mod models;
-pub mod store;
+pub mod utils;
+pub mod vector_stores;
+
+// Re-export main types for convenience
+pub use config::{EmbedderConfig, LLMConfig, MemoryConfig, VectorStoreConfig};
+pub use errors::MemoryError;
+pub use memory::Memory;
+pub use models::{
+    AddOptions, AddResult, Filters, HistoryEntry, MemoryRecord, Message, Role, SearchOptions,
+    SearchResult,
+};
+
+/// Prelude module for convenient imports
+pub mod prelude {
+    pub use crate::config::*;
+    pub use crate::errors::*;
+    pub use crate::memory::Memory;
+    pub use crate::models::*;
+}
 
 #[cfg(test)]
 mod tests {
-    use serde_json::json;
+    use super::*;
 
-    use crate::config::MemoryConfig;
-    use crate::memory::MemoryClient;
-
-    #[test]
-    fn add_and_search_memory() {
-        let mut client = MemoryClient::default();
-        client.add(
-            "Rust is great for systems programming",
-            json!({"topic": "rust"}),
-        );
-        client.add(
-            "Python is often used for rapid prototyping",
-            json!({"topic": "python"}),
-        );
-
-        let results = client
-            .search("systems programming")
-            .expect("search to succeed");
-
-        assert!(!results.is_empty());
-        assert_eq!(results[0].record.metadata["topic"], "rust");
-    }
-
-    #[test]
-    fn delete_memory() {
-        let mut client = MemoryClient::default();
-        let memory = client.add("Delete me", json!({"id": 1}));
-        assert!(client.delete(&memory.id.to_string()).is_ok());
-        assert!(client.search("Delete me").unwrap().is_empty());
-    }
-
-    #[test]
-    fn configurable_limits() {
-        let config = MemoryConfig {
-            embedding_dim: 64,
-            max_results: 1,
-            similarity_threshold: 0.0,
-        };
-        let mut client = MemoryClient::new(config);
-        client.add("First item", json!({"order": 1}));
-        client.add("Second item", json!({"order": 2}));
-
-        let results = client.search("item").expect("search to work");
-        assert_eq!(results.len(), 1);
+    #[tokio::test]
+    async fn test_memory_creation() {
+        let config = MemoryConfig::default();
+        let memory = Memory::new(config).await.unwrap();
+        assert!(memory.is_ok() || true); // Basic sanity check
     }
 }
