@@ -63,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         println!("Extracted {} memories:", result.results.len());
         for r in &result.results {
-            println!("  - {} ({})", r.memory, r.event.to_string());
+            println!("  - {} ({:?})", r.memory, r.event);
         }
 
         // Search for relevant memories

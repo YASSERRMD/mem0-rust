@@ -2,9 +2,9 @@
 
 use async_trait::async_trait;
 use qdrant_client::qdrant::{
-    points_selector::PointsSelectorOneOf, Condition, CreateCollectionBuilder, Distance, Filter,
-    PointId, PointStruct, PointsIdsList, PointsSelector, ScrollPointsBuilder, SearchPointsBuilder,
-    UpsertPointsBuilder, VectorParamsBuilder, WithPayloadSelector,
+    Condition, CreateCollectionBuilder, Distance, Filter,
+    PointId, PointStruct, PointsIdsList, ScrollPointsBuilder, SearchPointsBuilder,
+    UpsertPointsBuilder, VectorParamsBuilder, DeletePointsBuilder
 };
 use qdrant_client::Qdrant;
 use std::collections::HashMap;
@@ -239,12 +239,10 @@ impl VectorStore for QdrantStore {
     async fn delete(&self, id: &str) -> Result<(), VectorStoreError> {
         self.client
             .delete_points(
-                PointsSelector {
-                    points_selector_one_of: Some(PointsSelectorOneOf::Points(PointsIdsList {
-                        ids: vec![PointId::from(id.to_string())],
-                    })),
-                },
-                Some(&self.collection_name),
+                DeletePointsBuilder::new(&self.collection_name)
+                .points(PointsIdsList {
+                    ids: vec![PointId::from(id.to_string())],
+                })
             )
             .await
             .map_err(|e| VectorStoreError::Delete(e.to_string()))?;

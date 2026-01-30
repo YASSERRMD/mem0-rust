@@ -5,7 +5,7 @@ use async_openai::{
     types::{
         ChatCompletionRequestMessage, ChatCompletionRequestSystemMessageArgs,
         ChatCompletionRequestUserMessageArgs, ChatCompletionRequestAssistantMessageArgs,
-        CreateChatCompletionRequestArgs, ResponseFormat, ResponseFormatType,
+        CreateChatCompletionRequestArgs, ResponseFormat
     },
     Client,
 };
@@ -52,19 +52,19 @@ impl OpenAILLM {
         match msg.role {
             Role::System => Ok(ChatCompletionRequestMessage::System(
                 ChatCompletionRequestSystemMessageArgs::default()
-                    .content(&msg.content)
+                    .content(msg.content.clone())
                     .build()
                     .map_err(|e| LLMError::Api(e.to_string()))?,
             )),
             Role::User => Ok(ChatCompletionRequestMessage::User(
                 ChatCompletionRequestUserMessageArgs::default()
-                    .content(&msg.content)
+                    .content(msg.content.clone())
                     .build()
                     .map_err(|e| LLMError::Api(e.to_string()))?,
             )),
             Role::Assistant => Ok(ChatCompletionRequestMessage::Assistant(
                 ChatCompletionRequestAssistantMessageArgs::default()
-                    .content(&msg.content)
+                    .content(msg.content.clone())
                     .build()
                     .map_err(|e| LLMError::Api(e.to_string()))?,
             )),
@@ -99,9 +99,7 @@ impl LLM for OpenAILLM {
         }
 
         if options.json_mode {
-            request_builder.response_format(ResponseFormat {
-                r#type: ResponseFormatType::JsonObject,
-            });
+            request_builder.response_format(ResponseFormat::JsonObject);
         }
 
         let request = request_builder

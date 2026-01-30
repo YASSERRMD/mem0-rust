@@ -22,8 +22,10 @@ impl OllamaLLM {
             url::Url::parse("http://localhost:11434").unwrap()
         });
 
-        let host = url.host_str().unwrap_or("localhost").to_string();
+        let scheme: String = url.scheme().try_into().unwrap_or("http").to_string();
+        let hostname = url.host_str().unwrap_or("localhost").to_string();
         let port = url.port().unwrap_or(11434);
+        let host = format!("{}://{}", scheme, hostname);
 
         let client = Ollama::new(host, port);
 
@@ -72,11 +74,11 @@ impl LLM for OllamaLLM {
         let temperature = options.temperature.unwrap_or(self.default_temperature);
         request = request.options(
             ollama_rs::generation::options::GenerationOptions::default()
-                .temperature(temperature as f64),
+                .temperature(temperature),
         );
 
         if options.json_mode {
-            request = request.format(ollama_rs::generation::completion::request::FormatType::Json);
+            request = request.format(ollama_rs::generation::parameters::FormatType::Json);
         }
 
         let response = self
