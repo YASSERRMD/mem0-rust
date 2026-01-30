@@ -72,11 +72,11 @@ impl LLM for OllamaLLM {
         let temperature = options.temperature.unwrap_or(self.default_temperature);
         request = request.options(
             ollama_rs::generation::options::GenerationOptions::default()
-                .temperature(temperature as f64),
+                .temperature(temperature),
         );
 
         if options.json_mode {
-            request = request.format(ollama_rs::generation::completion::request::FormatType::Json);
+            request = request.format(ollama_rs::generation::parameters::FormatType::Json);
         }
 
         let response = self
