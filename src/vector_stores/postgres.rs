@@ -116,7 +116,7 @@ impl VectorStore for PostgresStore {
         let embedding_str = Self::format_embedding(embedding);
         
         // Build WHERE clause from filters
-        let mut where_clauses = Vec::new();
+        let mut where_clauses: Vec<String> = Vec::new();
         
         if let Some(_f) = filters {
             // TODO: Implement full filter translation
@@ -272,7 +272,7 @@ impl VectorStore for PostgresStore {
         filters: Option<&Filters>,
         limit: usize,
     ) -> Result<Vec<VectorSearchResult>, VectorStoreError> {
-        let mut where_clauses = Vec::new();
+        let mut where_clauses: Vec<String> = Vec::new();
         
         if let Some(_f) = filters {
             // TODO: Implement full filter translation
@@ -312,7 +312,7 @@ impl VectorStore for PostgresStore {
     }
 
     async fn delete_all(&self, filters: Option<&Filters>) -> Result<usize, VectorStoreError> {
-        let mut where_clauses = Vec::new();
+        let mut where_clauses: Vec<String> = Vec::new();
         
         if let Some(_f) = filters {
             // TODO: Implement full filter translation
