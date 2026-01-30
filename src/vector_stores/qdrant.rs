@@ -2,9 +2,9 @@
 
 use async_trait::async_trait;
 use qdrant_client::qdrant::{
-    points_selector::PointsSelectorOneOf, Condition, CreateCollectionBuilder, Distance, Filter,
-    PointId, PointStruct, PointsIdsList, PointsSelector, ScrollPointsBuilder, SearchPointsBuilder,
-    UpsertPointsBuilder, VectorParamsBuilder, WithPayloadSelector, DeletePointsBuilder
+    Condition, CreateCollectionBuilder, Distance, Filter,
+    PointId, PointStruct, PointsIdsList, ScrollPointsBuilder, SearchPointsBuilder,
+    UpsertPointsBuilder, VectorParamsBuilder, DeletePointsBuilder
 };
 use qdrant_client::Qdrant;
 use std::collections::HashMap;
