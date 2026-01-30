@@ -60,6 +60,7 @@ redis = { version = "0.27", features = ["tokio-comp", "connection-manager", "jso
 
 # SQLite for history (always available)
 rusqlite = { version = "0.32", features = ["bundled"] }
+url = "=2.5.8"
 
 [dev-dependencies]
 tokio-test = "0.4"
