@@ -158,6 +158,12 @@ pub struct HuggingFaceEmbedderConfig {
 
     /// API endpoint (optional)
     pub api_url: Option<String>,
+
+    /// Number of retry attempts for transient HTTP failures
+    pub retry_attempts: u32,
+
+    /// Base delay for retries in milliseconds
+    pub retry_base_delay_ms: u64,
 }
 
 impl Default for HuggingFaceEmbedderConfig {
@@ -167,6 +173,8 @@ impl Default for HuggingFaceEmbedderConfig {
             model: "sentence-transformers/all-MiniLM-L6-v2".to_string(),
             dimensions: 384,
             api_url: None,
+            retry_attempts: 3,
+            retry_base_delay_ms: 150,
         }
     }
 }
