@@ -9,6 +9,9 @@
 mod memory;
 mod traits;
 
+#[cfg(test)]
+mod conformance;
+
 pub use memory::InMemoryStore;
 pub use traits::VectorStore;
 

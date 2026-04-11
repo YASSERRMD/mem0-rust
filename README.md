@@ -19,6 +19,7 @@ maintained by [YASSERRMD](https://github.com/YASSERRMD).
 - 📜 **History Tracking** - Track memory changes (ADD/UPDATE/DELETE) with local SQLite history
 - 👥 **Multi-User** - Isolated memory spaces per user/agent/run
 - 🏷️ **Metadata Filtering** - Rich filtering with operators (eq, gt, in, contains, etc.)
+- 🕸️ **Graph Memory (Experimental)** - Entity/relation graph primitives with in-memory backend
 
 ## Installation
 
@@ -41,6 +42,7 @@ mem0-rust = "0.2"
 | `postgres` | PostgreSQL with pgvector |
 | `redis` | Redis with vector search |
 | `full` | All features |
+| `python` | PyO3 Python bindings (experimental) |
 
 ## Quick Start
 
@@ -144,6 +146,16 @@ let config = MemoryConfig {
 // Use rerank: true in SearchOptions
 ```
 
+### Python FFI (Experimental)
+
+Enable the `python` feature to compile PyO3 bindings:
+
+```bash
+cargo build --features python
+```
+
+The module currently exposes a `PyMemory` class for `new`, `add`, and `search`, plus a `version()` helper.
+
 ## API Reference
 
 ### Memory Methods
@@ -194,11 +206,18 @@ mem0-rust/
 │   ├── embeddings/      # Embedders (Mock, OpenAI, Ollama, HuggingFace)
 │   ├── vector_stores/   # Stores (Memory, Qdrant, Postgres, Redis)
 │   ├── llms/            # LLMs (OpenAI, Ollama, Anthropic)
+│   ├── graph/           # Graph memory (nodes/edges + in-memory backend)
 │   ├── history/         # History tracking (SQLite)
 │   ├── rerankers/       # Rerankers (Cohere)
 │   ├── memory/          # Core memory management
 │   └── utils/           # Utilities
 ```
+
+## Roadmap
+
+For phased Rust/Python parity delivery and branching workflow, see:
+
+- [`docs/PHASED_IMPLEMENTATION_PLAN.md`](docs/PHASED_IMPLEMENTATION_PLAN.md)
 
 ## Contributing
 

@@ -316,6 +316,12 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_conformance_contract() {
+        let store = InMemoryStore::new();
+        crate::vector_stores::conformance::run_basic_contract(&store).await;
+    }
+
+    #[tokio::test]
     async fn test_insert_and_get() {
         let store = InMemoryStore::new();
         let payload = create_test_payload("test content");
