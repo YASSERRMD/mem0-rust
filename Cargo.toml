@@ -63,6 +63,7 @@ redis = { version = "0.27", features = ["tokio-comp", "connection-manager", "jso
 
 # SQLite for history (always available)
 rusqlite = { version = "0.32", features = ["bundled"] }
+url = "=2.5.8"
 pyo3 = { version = "0.22", features = ["macros", "auto-initialize"], optional = true }
 
 [dev-dependencies]

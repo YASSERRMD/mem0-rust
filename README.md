@@ -156,21 +156,6 @@ cargo build --features python
 
 The module currently exposes a `PyMemory` class for `new`, `add`, and `search`, plus a `version()` helper.
 
-## CLI (experimental)
-
-Start the interactive shell:
-
-```bash
-cargo run --bin mem0
-```
-
-Inside the shell, use:
-
-- `add <user_id> <text>`
-- `search <user_id> <query>`
-- `help`
-- `exit`
-
 ## API Reference
 
 ### Memory Methods
