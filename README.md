@@ -19,6 +19,7 @@ maintained by [YASSERRMD](https://github.com/YASSERRMD).
 - 📜 **History Tracking** - Track memory changes (ADD/UPDATE/DELETE) with local SQLite history
 - 👥 **Multi-User** - Isolated memory spaces per user/agent/run
 - 🏷️ **Metadata Filtering** - Rich filtering with operators (eq, gt, in, contains, etc.)
+- 🕸️ **Graph Memory (Experimental)** - Entity/relation graph primitives with in-memory backend
 
 ## Installation
 
@@ -205,6 +206,7 @@ mem0-rust/
 │   ├── embeddings/      # Embedders (Mock, OpenAI, Ollama, HuggingFace)
 │   ├── vector_stores/   # Stores (Memory, Qdrant, Postgres, Redis)
 │   ├── llms/            # LLMs (OpenAI, Ollama, Anthropic)
+│   ├── graph/           # Graph memory (nodes/edges + in-memory backend)
 │   ├── history/         # History tracking (SQLite)
 │   ├── rerankers/       # Rerankers (Cohere)
 │   ├── memory/          # Core memory management
