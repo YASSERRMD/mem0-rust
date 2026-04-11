@@ -41,6 +41,7 @@ mem0-rust = "0.2"
 | `postgres` | PostgreSQL with pgvector |
 | `redis` | Redis with vector search |
 | `full` | All features |
+| `python` | PyO3 Python bindings (experimental) |
 
 ## Quick Start
 
@@ -144,6 +145,16 @@ let config = MemoryConfig {
 // Use rerank: true in SearchOptions
 ```
 
+### Python FFI (Experimental)
+
+Enable the `python` feature to compile PyO3 bindings:
+
+```bash
+cargo build --features python
+```
+
+The module currently exposes a `PyMemory` class for `new`, `add`, and `search`, plus a `version()` helper.
+
 ## API Reference
 
 ### Memory Methods
@@ -199,6 +210,12 @@ mem0-rust/
 │   ├── memory/          # Core memory management
 │   └── utils/           # Utilities
 ```
+
+## Roadmap
+
+For phased Rust/Python parity delivery and branching workflow, see:
+
+- [`docs/PHASED_IMPLEMENTATION_PLAN.md`](docs/PHASED_IMPLEMENTATION_PLAN.md)
 
 ## Contributing
 
