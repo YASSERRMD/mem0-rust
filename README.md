@@ -156,26 +156,6 @@ cargo build --features python
 
 The module currently exposes a `PyMemory` class for `new`, `add`, and `search`, plus a `version()` helper.
 
-HuggingFace embedding configuration now includes retry controls:
-
-- `retry_attempts` (default: `3`)
-- `retry_base_delay_ms` (default: `150`)
-
-## CLI (experimental)
-
-Start the interactive shell:
-
-```bash
-cargo run --bin mem0
-```
-
-Inside the shell, use:
-
-- `add <user_id> <text>`
-- `search <user_id> <query>`
-- `help`
-- `exit`
-
 ## API Reference
 
 ### Memory Methods

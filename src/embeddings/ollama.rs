@@ -20,9 +20,11 @@ impl OllamaEmbedder {
         let url = url::Url::parse(&config.base_url).unwrap_or_else(|_| {
             url::Url::parse("http://localhost:11434").unwrap()
         });
-        
-        let host = url.host_str().unwrap_or("localhost").to_string();
+
+        let scheme: String = url.scheme().try_into().unwrap_or("http").to_string();
+        let hostname = url.host_str().unwrap_or("localhost").to_string();
         let port = url.port().unwrap_or(11434);
+        let host = format!("{}://{}", scheme, hostname);
 
         let client = Ollama::new(host, port);
 
@@ -39,7 +41,10 @@ impl Embedder for OllamaEmbedder {
     async fn embed(&self, text: &str) -> Result<Vec<f32>, EmbeddingError> {
         let response = self
             .client
-            .generate_embeddings(self.model.clone(), text.to_string(), None)
+            .generate_embeddings(ollama_rs::generation::embeddings::request::GenerateEmbeddingsRequest::new(
+                self.model.clone(),
+                ollama_rs::generation::embeddings::request::EmbeddingsInput::Single(text.to_string())
+            ))
             .await
             .map_err(|e| EmbeddingError::Api(e.to_string()))?;
 

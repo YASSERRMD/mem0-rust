@@ -50,9 +50,6 @@ Atomic tasks:
 4. Implement Pinecone store.
 5. Implement Weaviate store.
 
-Status update:
-- ✅ Task 1 complete: shared vector-store conformance contract is now in place and used by in-memory backend tests.
-
 ### Phase 4 — Enhanced LLM & Embedding Providers
 
 Scope: AWS Bedrock, Azure OpenAI, Gemini.
@@ -63,9 +60,6 @@ Atomic tasks:
 3. Implement Azure OpenAI support.
 4. Implement Gemini support.
 5. Add provider-specific integration tests.
-
-Phase 4 status update:
-- ✅ Task 1 in progress milestone: added shared retry utility + HuggingFace retry configuration knobs and provider usage.
 
 ### Phase 5 — Client/Server & Proxy Mode
 
@@ -82,9 +76,6 @@ Atomic tasks:
 2. Add performance benchmarks and profiling-guided tuning.
 3. Improve observability (metrics/tracing).
 4. Finalize docs and migration guides.
-
-Phase 6 status update:
-- ✅ Task 1 complete: basic interactive CLI shell (`cargo run --bin mem0`) is available for local add/search workflows.
 
 ## Delivery Workflow (Per Phase)
 
