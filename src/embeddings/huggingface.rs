@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use super::traits::Embedder;
 use crate::config::HuggingFaceEmbedderConfig;
 use crate::errors::EmbeddingError;
+use crate::utils::{retry_async, RetryPolicy};
 
 /// HuggingFace embeddings provider
 pub struct HuggingFaceEmbedder {
@@ -15,6 +16,7 @@ pub struct HuggingFaceEmbedder {
     model: String,
     dimensions: usize,
     api_url: String,
+    retry_policy: RetryPolicy,
 }
 
 impl HuggingFaceEmbedder {
@@ -38,6 +40,10 @@ impl HuggingFaceEmbedder {
             model: config.model,
             dimensions: config.dimensions,
             api_url,
+            retry_policy: RetryPolicy {
+                attempts: config.retry_attempts,
+                base_delay_ms: config.retry_base_delay_ms,
+            },
         })
     }
 }
@@ -72,27 +78,39 @@ impl Embedder for HuggingFaceEmbedder {
             },
         };
 
-        let response = self
-            .client
-            .post(&self.api_url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .json(&request)
-            .send()
-            .await
-            .map_err(|e| EmbeddingError::Network(e.to_string()))?;
+        let result: HFResponse = retry_async(self.retry_policy, || async {
+            let response = self
+                .client
+                .post(&self.api_url)
+                .header("Authorization", format!("Bearer {}", self.api_key))
+                .json(&request)
+                .send()
+                .await
+                .map_err(|e| EmbeddingError::Network(e.to_string()))?;
 
-        if !response.status().is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(EmbeddingError::Api(format!(
-                "HuggingFace API error: {}",
-                error_text
-            )));
-        }
+            if !response.status().is_success() {
+                let status = response.status();
+                let error_text = response.text().await.unwrap_or_default();
 
-        let result: HFResponse = response
-            .json()
-            .await
-            .map_err(|e| EmbeddingError::InvalidResponse(e.to_string()))?;
+                if status.as_u16() == 429 || status.is_server_error() {
+                    return Err(EmbeddingError::Network(format!(
+                        "transient HuggingFace error {}: {}",
+                        status, error_text
+                    )));
+                }
+
+                return Err(EmbeddingError::Api(format!(
+                    "HuggingFace API error: {}",
+                    error_text
+                )));
+            }
+
+            response
+                .json()
+                .await
+                .map_err(|e| EmbeddingError::InvalidResponse(e.to_string()))
+        })
+        .await?;
 
         match result {
             HFResponse::Single(embedding) => Ok(embedding),
@@ -139,27 +157,39 @@ impl Embedder for HuggingFaceEmbedder {
             },
         };
 
-        let response = self
-            .client
-            .post(&self.api_url)
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .json(&request)
-            .send()
-            .await
-            .map_err(|e| EmbeddingError::Network(e.to_string()))?;
+        let result: HFResponse = retry_async(self.retry_policy, || async {
+            let response = self
+                .client
+                .post(&self.api_url)
+                .header("Authorization", format!("Bearer {}", self.api_key))
+                .json(&request)
+                .send()
+                .await
+                .map_err(|e| EmbeddingError::Network(e.to_string()))?;
 
-        if !response.status().is_success() {
-            let error_text = response.text().await.unwrap_or_default();
-            return Err(EmbeddingError::Api(format!(
-                "HuggingFace API error: {}",
-                error_text
-            )));
-        }
+            if !response.status().is_success() {
+                let status = response.status();
+                let error_text = response.text().await.unwrap_or_default();
 
-        let result: HFResponse = response
-            .json()
-            .await
-            .map_err(|e| EmbeddingError::InvalidResponse(e.to_string()))?;
+                if status.as_u16() == 429 || status.is_server_error() {
+                    return Err(EmbeddingError::Network(format!(
+                        "transient HuggingFace error {}: {}",
+                        status, error_text
+                    )));
+                }
+
+                return Err(EmbeddingError::Api(format!(
+                    "HuggingFace API error: {}",
+                    error_text
+                )));
+            }
+
+            response
+                .json()
+                .await
+                .map_err(|e| EmbeddingError::InvalidResponse(e.to_string()))
+        })
+        .await?;
 
         match result {
             HFResponse::Single(embedding) => Ok(vec![embedding]),
