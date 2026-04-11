@@ -50,9 +50,6 @@ Atomic tasks:
 4. Implement Pinecone store.
 5. Implement Weaviate store.
 
-Status update:
-- ✅ Task 1 complete: shared vector-store conformance contract is now in place and used by in-memory backend tests.
-
 ### Phase 4 — Enhanced LLM & Embedding Providers
 
 Scope: AWS Bedrock, Azure OpenAI, Gemini.
