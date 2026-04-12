@@ -30,6 +30,7 @@
 pub mod config;
 pub mod embeddings;
 pub mod errors;
+pub mod graph;
 pub mod history;
 pub mod llms;
 pub mod memory;
@@ -37,6 +38,9 @@ pub mod models;
 pub mod rerankers;
 pub mod utils;
 pub mod vector_stores;
+
+#[cfg(feature = "python")]
+pub mod python;
 
 // Re-export main types for convenience
 // Re-export main types for convenience

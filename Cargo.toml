@@ -26,6 +26,12 @@ ollama = ["dep:ollama-rs"]
 # LLM providers
 anthropic = []
 
+# Python bindings
+python = ["dep:pyo3"]
+
+# Client/server mode
+server = ["dep:axum"]
+
 [dependencies]
 # Core
 serde = { version = "1.0", features = ["derive"] }
@@ -60,6 +66,8 @@ redis = { version = "0.27", features = ["tokio-comp", "connection-manager", "jso
 
 # SQLite for history (always available)
 rusqlite = { version = "0.32", features = ["bundled"] }
+pyo3 = { version = "0.22", features = ["macros", "auto-initialize"], optional = true }
+axum = { version = "0.8", optional = true }
 
 [dev-dependencies]
 tokio-test = "0.4"
@@ -129,3 +137,8 @@ path = "examples/history_tracking.rs"
 [[example]]
 name = "reranking"
 path = "examples/reranking.rs"
+
+[[bin]]
+name = "mem0-server"
+path = "src/bin/mem0-server.rs"
+required-features = ["server"]
